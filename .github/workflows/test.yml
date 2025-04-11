@@ -1,0 +1,49 @@
+name: Test and Post Results (No Auth)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test-and-post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: |
+          npx jest --ci --json --outputFile=result.json || true
+
+      - name: Extract and send test results
+        run: |
+          PASSED=$(jq '[.testResults[].assertionResults[] | select(.status=="passed")] | length' result.json)
+          TOTAL=$(jq '[.testResults[].assertionResults[]] | length' result.json)
+
+          REPO_NAME="${{ github.repository }}"
+          REPO_NAME_ONLY="${REPO_NAME##*/}"
+          ASSIGNMENT_NAME="${REPO_NAME_ONLY%-*}"
+
+          GITHUB_USERNAME="${{ github.actor }}"
+          GITHUB_ACCOUNT_URL="https://github.com/${GITHUB_USERNAME}"
+          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+
+          curl -X POST https://script.google.com/macros/s/AKfycbwNweDcVZOnYzsAL7FqAiB2-UaeeSXhdyZw5K5cRRHnqZanifCVNcogHIZamGQ00-YkcQ/exec \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"github_username\": \"${GITHUB_USERNAME}\",
+              \"github_account_url\": \"${GITHUB_ACCOUNT_URL}\",
+              \"commit_url\": \"${COMMIT_URL}\",
+              \"assignment_name\": \"${ASSIGNMENT_NAME}\",
+              \"passed_tests\": $PASSED,
+              \"total_tests\": $TOTAL
+            }"

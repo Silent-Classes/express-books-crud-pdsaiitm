@@ -1,0 +1,28 @@
+# Node dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv files (optional, if using env config)
+.env
+
+# Jest coverage reports
+coverage/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode settings (optional)
+.vscode/
+
+# Test outputs or temp files
+*.log
+*.tmp
+
+
+# Prevent private tests from being pushed to the student-facing repo
+test/private/
